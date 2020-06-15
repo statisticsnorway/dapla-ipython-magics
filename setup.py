@@ -31,7 +31,7 @@ setup(
     author="Statistics Norway",
     author_email="bjorn.skaar@ssb.no",
 
-    description="Data pseudonymization functions used by SSB",
+    description="IPython magics for dapla.",
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
 
