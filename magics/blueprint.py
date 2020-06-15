@@ -13,9 +13,6 @@ class Blueprint(Magics):
         super(Blueprint, self).__init__(shell)
         self._input_datasets = {}
         self._output_datasets = {}
-        # Register inputs and out to the user scope
-        self.shell.user_ns['__input_datasets'] = self._input_datasets
-        self.shell.user_ns['__output_datasets'] = self._output_datasets
 
     @cell_magic
     def register_input(self, line, cell):
@@ -68,7 +65,7 @@ class Blueprint(Magics):
     @line_magic
     def input_exist(self, value):
         "Check if input value is registered"
-        for ds in __input_datasets.values():
+        for ds in self._input_datasets.values():
             if ds['value'] == value:
                 ds['hitCount'] += 1 
                 return True
@@ -77,7 +74,7 @@ class Blueprint(Magics):
     @line_magic
     def output_exist(self, value):
         "Check if output value is registered"
-        for ds in __output_datasets.values():
+        for ds in self._output_datasets.values():
             if ds['value'] == value:
                 ds['hitCount'] += 1 
                 return True
