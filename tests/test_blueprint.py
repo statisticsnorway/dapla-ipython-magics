@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 from nose.tools import with_setup
-from magics.blueprint import Blueprint
+from dapla.magics.blueprint import Blueprint
 
 magic = None
 shell = None
