@@ -12,6 +12,7 @@ def _setup():
 
     magic = Blueprint(shell=None)
     magic.shell = shell = MagicMock()
+    magic.shell.user_ns = {}
     magic.ipython_display = ipython_display = MagicMock()
 
 
@@ -20,22 +21,26 @@ def _teardown():
 
 
 @with_setup(_setup, _teardown)
-def test_register_input():
+def test_define_input():
     cell = "alias /some/path"
-    magic.register_input(None, cell)
-    assert magic._input_datasets == {'alias': {'hitCount': 0, 'value': '/some/path'}}
-    path = magic.get_input("alias")
-    assert path == "/some/path"
-    # Check that hit count has increased by 1
-    assert magic._input_datasets == {'alias': {'hitCount': 1, 'value': '/some/path'}}
-
+    magic.define_input(None, cell)
+    assert magic._input_datasets == {'alias': {'dataset': None, 'path': '/some/path'}}
+    ref = magic.get_input("alias")
+    assert ref['path'] == "/some/path"
 
 @with_setup(_setup, _teardown)
-def test_register_output():
+def test_register_input():
     cell = "alias /some/path"
-    magic.register_output(None, cell)
-    assert magic._output_datasets == {'alias': {'hitCount': 0, 'value': '/some/path'}}
-    path = magic.get_output("alias")
-    assert path == "/some/path"
-    # Check that hit count has increased by 1
-    assert magic._output_datasets == {'alias': {'hitCount': 1, 'value': '/some/path'}}
+    magic.define_input(None, cell)
+    magic.shell.user_ns['realdataset'] = {'dataset': 'dummy'}
+    magic.register_input_dataset("alias realdataset")
+    ref = magic.get_input("alias")
+    assert ref['dataset'] == {'dataset': 'dummy'}
+
+@with_setup(_setup, _teardown)
+def test_define_output():
+    cell = "alias /some/path"
+    magic.define_output(None, cell)
+    assert magic._output_datasets == {'alias': {'dataset': None, 'path': '/some/path'}}
+    ref = magic.get_output("alias")
+    assert ref['path'] == "/some/path"

@@ -15,40 +15,66 @@ class Blueprint(Magics):
         self._output_datasets = {}
 
     @cell_magic
-    def register_input(self, line, cell):
-        "Register input datasets"
+    def define_input(self, line, cell):
+        "Define input datasets"
         for line in cell.strip().split('\n'):
             if line.strip().startswith('#'):
                 continue
             key, val = line.split()
-            self._input_datasets[key.strip()] = {"value" : val.strip(), "hitCount" : 0}
+            self._input_datasets[key.strip()] = {"path": val.strip(), "dataset": None}
 
     @cell_magic
-    def register_output(self, line, cell):
-        "Register output datasets"
+    def define_output(self, line, cell):
+        "Define output datasets"
         for line in cell.strip().split('\n'):
             if line.strip().startswith('#'):
                 continue
             key, val = line.split()
-            self._output_datasets[key.strip()] = {"value" : val.strip(), "hitCount" : 0}
+            self._output_datasets[key.strip()] = {"path": val.strip(), "dataset": None}
 
     @line_magic
     def show_input(self, line):
         "List input datasets"
-        return pd.DataFrame(pd.Series(self._input_datasets, name = "input dataset"))
+        # Show only path values
+        mapped = dict(zip(self._input_datasets, map(lambda v: [v['path'], v['dataset'] is not None], self._input_datasets.values())))
+        return pd.DataFrame.from_dict(mapped, orient='index', columns=['Path', 'Dataset loaded'])
 
     @line_magic
     def show_output(self, line):
         "List output datasets"
-        return pd.DataFrame(pd.Series(self._output_datasets, name = "output dataset"))
+        # Show only path values
+        mapped = dict(zip(self._output_datasets, map(lambda v: [v['path'], v['dataset'] is not None], self._output_datasets.values())))
+        return pd.DataFrame.from_dict(mapped, orient='index', columns=['Path', 'Dataset loaded'])
 
     @line_magic
     def get_input(self, name):
         "Get input by name"
         try:
-            ds = self._input_datasets[name]
-            ds['hitCount'] += 1 
-            return ds['value']
+            return self._input_datasets[name]
+        except KeyError:
+            self.ipython_display.send_error(u'Could not find input dataset with name {}'.format(name))
+
+    @line_magic
+    def register_input_dataset(self, line):
+        "Register input dataset to a defined name"
+        try:
+            name, ref = line.split(' ')
+            ref = self.shell.user_ns[ref]
+            if ref is not None:
+                ds = self._input_datasets[name]
+                ds['dataset'] = ref
+        except KeyError:
+            self.ipython_display.send_error(u'Could not find input dataset with name {}'.format(name))
+
+    @line_magic
+    def register_output_dataset(self, line):
+        "Register output dataset to a defined name"
+        try:
+            name, ref = line.split(' ')
+            ref = self.shell.user_ns[ref]
+            if ref is not None:
+                ds = self._output_datasets[name]
+                ds['dataset'] = ref
         except KeyError:
             self.ipython_display.send_error(u'Could not find input dataset with name {}'.format(name))
 
@@ -56,9 +82,7 @@ class Blueprint(Magics):
     def get_output(self, name):
         "Get output by name"
         try:
-            ds = self._output_datasets[name]
-            ds['hitCount'] += 1 
-            return ds['value']
+            return self._output_datasets[name]
         except KeyError:
             self.ipython_display.send_error(u'Could not find output dataset with name {}'.format(name))
 
@@ -67,7 +91,6 @@ class Blueprint(Magics):
         "Check if input value is registered"
         for ds in self._input_datasets.values():
             if ds['value'] == value:
-                ds['hitCount'] += 1 
                 return True
         return False
 
@@ -76,7 +99,6 @@ class Blueprint(Magics):
         "Check if output value is registered"
         for ds in self._output_datasets.values():
             if ds['value'] == value:
-                ds['hitCount'] += 1 
                 return True
         return False
 
