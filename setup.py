@@ -24,7 +24,7 @@ DEPENDENCIES = [
 
 setup(
     name="ssb-ipython-magics",
-    version="0.0.1",
+    version="0.0.2",
     url="https://github.com/statisticsnorway/dapla-ipython-magics",
     license='MIT',
 
